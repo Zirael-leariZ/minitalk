@@ -6,63 +6,77 @@
 /*   By: oishchen <oishchen@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 08:49:44 by oishchen          #+#    #+#             */
-/*   Updated: 2025/04/20 13:33:21 by oishchen         ###   ########.fr       */
+/*   Updated: 2025/04/21 00:07:21 by oishchen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-// #include "minitalk.h"
+// #include "../mixlibft/libft/includes/libft.h"
+// #include "../mixlibft/printf/includes/ft_printf.h"
 
-void	ft_get_pid(void)
+volatile sig_atomic_t	kill_result;
+
+void	ft_exit(int stauts)
 {
-	pid_t	pid;
-
-	pid = getpid();
-	ft_printf("Server PID: %d\n", pid);
+	ft_printf("The server was terminated, status is: %d\n", stauts);
+	exit(1);
 }
 
-void	sig_handler(int signum, siginfo_t *info, void *context)
+int	ft_get_pid()
 {
-	static int				i = 0;
+	pid_t	srv_pid;
+
+	srv_pid = getpid();
+	return (ft_printf("Server PID: %d\n", srv_pid));
+}
+
+void	ft_sig_handler(int signum, siginfo_t *info, void *contxt)
+{
+	static int				bit = 0;
 	static unsigned char	c = 0;
 
-	(void)context;
+	(void)contxt;
 	(void)info;
-
-	// printf("inside the handler\n");
-	if (signum == SIGUSR1)
-		c |= 1 << (7 - i);
-	i++;
-	if (i == 8)
+	if (signum == SIGINT)
+		ft_exit(1);
+	else if (signum == SIGUSR1)
+		c |= 1 << bit;
+	// kill(info->si_pid, SIGUSR1);
+	usleep(100);
+	bit++;
+	if (bit == 8)
 	{
 		if (c == '\0')
 		{
 			write(1, "\n", 1);
-			kill(info->si_pid, SIGUSR1);
+			kill_result = kill (info->si_pid, SIGUSR2);
 		}
 		else
-		{
 			write(1, &c, 1);
-			// kill(info->si_pid, SIGUSR2);
-		}
-		i = 0;
+		bit = 0;
 		c = 0;
 	}
 }
 
-int main()
+int	main(void)
 {
 	struct sigaction	sa;
+	int					print_res;
 
-
-	ft_get_pid();
+	print_res = ft_get_pid();
+	if (print_res == -1)
+		return(ft_printf("ERROR: FD is closed\n"), 1);
 	ft_bzero(&sa, sizeof(sa));
-	sa.sa_sigaction = sig_handler;
+	sa.sa_sigaction = ft_sig_handler;
 	sa.sa_flags = SA_SIGINFO;
-	// printf("Just a check\n");
-	sigaction(SIGUSR1, &sa, NULL);
-	sigaction(SIGUSR2, &sa, NULL);
+	sigaddset(&sa.sa_mask, SIGUSR1);
+	sigaddset(&sa.sa_mask, SIGUSR2);
+	kill_result = 0;
+	if (sigaction(SIGUSR1, &sa, NULL) == -1
+		|| sigaction(SIGUSR2, &sa, NULL) == -1)
+		return(ft_printf("ERROR: SIG mapping failed\n"), 1);
+	if (kill_result)
+		return (ft_printf("The kill failed\n"));
 	while (1)
 		pause();
-	return (0);
 }
