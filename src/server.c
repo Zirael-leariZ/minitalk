@@ -6,14 +6,11 @@
 /*   By: oishchen <oishchen@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 08:49:44 by oishchen          #+#    #+#             */
-/*   Updated: 2025/04/19 15:44:30 by oishchen         ###   ########.fr       */
+/*   Updated: 2025/04/20 13:33:21 by oishchen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <signal.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <strings.h>
+#include "minitalk.h"
 // #include "minitalk.h"
 
 void	ft_get_pid(void)
@@ -21,7 +18,7 @@ void	ft_get_pid(void)
 	pid_t	pid;
 
 	pid = getpid();
-	printf("Server PID: %d\n", pid);
+	ft_printf("Server PID: %d\n", pid);
 }
 
 void	sig_handler(int signum, siginfo_t *info, void *context)
@@ -53,13 +50,13 @@ void	sig_handler(int signum, siginfo_t *info, void *context)
 	}
 }
 
-int main(int ac, char *av[])
+int main()
 {
-	pid_t				srv_pid;
 	struct sigaction	sa;
 
+
 	ft_get_pid();
-	bzero(&sa, sizeof(sa));
+	ft_bzero(&sa, sizeof(sa));
 	sa.sa_sigaction = sig_handler;
 	sa.sa_flags = SA_SIGINFO;
 	// printf("Just a check\n");
