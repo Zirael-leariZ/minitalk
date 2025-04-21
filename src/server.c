@@ -6,7 +6,7 @@
 /*   By: oishchen <oishchen@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 08:49:44 by oishchen          #+#    #+#             */
-/*   Updated: 2025/04/21 14:32:08 by oishchen         ###   ########.fr       */
+/*   Updated: 2025/04/21 16:23:10 by oishchen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,9 @@ int	main(void)
 		return (ft_printf("ERROR: SIG mapping failed\n"), 1);
 	while (1)
 	{
-		if (g_kill_result)
-			return (ft_printf("The kill failed\n"));
+		if (g_kill_result == -1)
+			return (ft_printf("The kill failed\n"), 1);
 		pause();
 	}
+	return (0);
 }
