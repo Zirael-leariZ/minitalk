@@ -6,19 +6,18 @@
 /*   By: oishchen <oishchen@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 08:49:51 by oishchen          #+#    #+#             */
-/*   Updated: 2025/04/21 00:07:07 by oishchen         ###   ########.fr       */
+/*   Updated: 2025/04/21 14:46:32 by oishchen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minitalk.h"
-#include "../mixlibft/libft/includes/libft.h"
-#include "../mixlibft/printf/includes/ft_printf.h"
+#include "minitalk.h"
 
-volatile sig_atomic_t	full_message;
+volatile sig_atomic_t	g_full_message;
 
 void	ft_sig_handler(int signum, siginfo_t *info, void *contxt)
 {
 	static int	bit;
+
 	(void)contxt;
 	(void)info;
 	if (signum == SIGUSR1)
@@ -26,29 +25,27 @@ void	ft_sig_handler(int signum, siginfo_t *info, void *contxt)
 	else if (signum == SIGUSR2)
 	{
 		bit++;
-		ft_putnbr_fd(bit, 1);
-		write(1, " bits were received\n", 20);
-		full_message = 1;
+		ft_printf("%d, bits were received\n", bit);
+		g_full_message = 1;
 	}
-	usleep(100);
 }
 
 void	send_message(unsigned char c, int srv_pid, int *kill_sts)
 {
-	int	bit = 0;
+	int	bit;
 
 	bit = 0;
 	while (bit < 8)
 	{
-		full_message = 0;
 		if ((c >> bit) & 1)
 			*kill_sts = kill(srv_pid, SIGUSR1);
 		else
 			*kill_sts = kill(srv_pid, SIGUSR2);
-		bit++;
 		if (*kill_sts == -1)
 			return ;
+		pause();
 		usleep(100);
+		bit++;
 	}
 }
 
@@ -73,7 +70,7 @@ int	main(int ac, char *av[])
 	if (sigaction(SIGUSR1, &sa, NULL) == -1
 		|| sigaction(SIGUSR2, &sa, NULL) == -1)
 		return (ft_printf("The SIG mapping failed\n"), 0);
-	full_message = 0;
+	g_full_message = 0;
 	kill_status = 0;
 	i = 0;
 	while (av[2][i] && !kill_status)
@@ -83,10 +80,12 @@ int	main(int ac, char *av[])
 	}
 	if (!kill_status)
 		send_message('\0', srv_pid, &kill_status);
-	if (kill_status == 1)
-		return (ft_printf("The kill function failed!\n"), 0);
-	while (!full_message)
+	while (!g_full_message)
+	{
+		if (kill_status == -1)
+			return (ft_printf("The kill function failed!\n"), 0);
 		pause();
+	}
 	ft_printf("The whole message was received!\n");
 	return (0);
 }
