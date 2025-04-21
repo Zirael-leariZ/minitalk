@@ -77,7 +77,5 @@ int	main(int ac, char *av[])
 	send_message('\0', srv_pid);
 	if (g_full_message == -1)
 		return (1);
-	while (!g_full_message)
-		pause();
 	return (ft_printf("The whole message was received!\n"), 0);
 }
